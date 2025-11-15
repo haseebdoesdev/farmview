@@ -8,7 +8,7 @@ This project was inspired by a task given during the **TechFest at COMSATS Islam
 
 **Built solo in approximately 2 hours** - A full-stack application with modern UI, authentication, role-based access, multilingual support, real-time market data tracking, AI-powered farming advice via Google Gemini API, and weather integration via OpenWeatherMap.
 
-![FarmView Dashboard](./farmer_dashboard.png)
+![FarmView Dashboard](./farmer_dashboard_advice+weather_cards.png)
 *Modern, clean interface for agricultural market tracking*
 
 ## 📸 Screenshots
@@ -29,6 +29,10 @@ This project was inspired by a task given during the **TechFest at COMSATS Islam
 
 ### User Dashboards
 
+#### Farmer Dashboard - Weather & Advice
+![Weather & Advice](./farmer_dashboard_advice+weather_cards.png)
+*Current weather conditions and AI-generated farming advice*
+
 #### Farmer Dashboard - Market Data & Prices
 ![Market Data Table](./farmer_dashboard_market_data_table.png)
 *Real-time market data organized by item and region*
@@ -36,10 +40,6 @@ This project was inspired by a task given during the **TechFest at COMSATS Islam
 #### Farmer Dashboard - Price Trends Visualization
 ![Price Chart](./farmer_dashboard_price_chart.png)
 *Interactive charts showing price trends over time*
-
-#### Farmer Dashboard - Weather & Advice
-![Weather & Advice](./farmer_dashboard_advice+weather_cards.png)
-*Current weather conditions and AI-generated farming advice*
 
 #### Admin Dashboard
 ![Admin Dashboard](./admin_dashboard_in_urdu.png)
