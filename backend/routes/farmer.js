@@ -2,6 +2,7 @@ const express = require('express');
 const MarketData = require('../models/MarketData');
 const auth = require('../middleware/auth');
 const axios = require('axios');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const router = express.Router();
 
@@ -26,11 +27,58 @@ router.get('/weather/:city', auth, async (req, res) => {
   }
 });
 
-// Get advice
+// Get advice based on weather
 router.get('/advice', auth, async (req, res) => {
-  // Simple logic-based advice
-  const advice = "Check weather before watering crops.";
-  res.json({ advice });
+  try {
+    const city = req.query.city || 'Karachi';
+    const apiKey = process.env.WEATHER_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
+    
+    if (!geminiKey) {
+      return res.json({ advice: "Check weather before watering crops." });
+    }
+
+    let weatherData = null;
+    try {
+      const weatherResponse = await axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`
+      );
+      weatherData = weatherResponse.data;
+    } catch (err) {
+      return res.json({ advice: "Check weather conditions before planning your farming activities." });
+    }
+
+    const genAI = new GoogleGenerativeAI(geminiKey);
+    
+    // CORRECTED: Using the latest stable 'gemini-2.5-flash'
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    const weatherInfo = {
+      temperature: weatherData.main.temp,
+      humidity: weatherData.main.humidity,
+      condition: weatherData.weather[0].description,
+      windSpeed: weatherData.wind?.speed || 0,
+      feelsLike: weatherData.main.feels_like
+    };
+
+    const prompt = `Based on the following weather conditions in ${city}, provide a brief, practical farming advice (2-3 sentences maximum):
+- Temperature: ${weatherInfo.temperature}°C
+- Humidity: ${weatherInfo.humidity}%
+- Condition: ${weatherInfo.condition}
+- Wind Speed: ${weatherInfo.windSpeed} m/s
+- Feels Like: ${weatherInfo.feelsLike}°C
+
+Give concise, actionable advice for farmers.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const advice = response.text().trim();
+
+    res.json({ advice });
+  } catch (err) {
+    console.error('Gemini API error:', err);
+    res.json({ advice: "Check weather conditions before planning your farming activities." });
+  }
 });
 
 module.exports = router;

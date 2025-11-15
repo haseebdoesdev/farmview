@@ -44,7 +44,7 @@ const FarmerDashboard = () => {
 
   const fetchAdvice = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/farmer/advice', {
+      const res = await axios.get('http://localhost:5000/api/farmer/advice?city=Karachi', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAdvice(res.data.advice);
@@ -54,7 +54,10 @@ const FarmerDashboard = () => {
   };
 
   const getChartData = (item) => {
-    const itemData = data.filter(d => d.item === item).slice(0, 7);
+    const itemData = data
+    .filter(d => d.item === item)
+    .sort((a, b) => new Date(a.date) - new Date(b.date)) // oldest to newest
+    .slice(0, 7);
     return {
       labels: itemData.map(d => new Date(d.date).toLocaleDateString()),
       datasets: [{
@@ -102,33 +105,207 @@ const FarmerDashboard = () => {
           gap: '24px',
           marginBottom: '24px'
         }}>
-          <div className="card">
-            <h3 style={{ marginTop: 0, color: '#2d8659', marginBottom: '16px' }}>
-              {t('farmerDashboard.weather')}
-            </h3>
-            {weather.main ? (
-              <div>
-                <p style={{ fontSize: '18px', margin: '8px 0' }}>
-                  <strong>{t('farmerDashboard.temperature')}:</strong> {weather.main.temp}°C
-                </p>
-                <p style={{ fontSize: '18px', margin: '8px 0' }}>
-                  <strong>{t('farmerDashboard.humidity')}:</strong> {weather.main.humidity}%
-                </p>
+          <div className="card" style={{
+            background: 'linear-gradient(135deg, #2d8659 0%, #3da372 100%)',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '120px',
+              height: '120px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }}></div>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>
+                  {t('farmerDashboard.weather')}
+                </h3>
                 {weather.weather && weather.weather[0] && (
-                  <p style={{ fontSize: '16px', margin: '8px 0', textTransform: 'capitalize' }}>
-                    {weather.weather[0].description}
-                  </p>
+                  <span style={{ fontSize: '32px' }}>
+                    {weather.weather[0].main === 'Clear' ? '☀️' : 
+                     weather.weather[0].main === 'Clouds' ? '☁️' :
+                     weather.weather[0].main === 'Rain' ? '🌧️' :
+                     weather.weather[0].main === 'Drizzle' ? '🌦️' :
+                     weather.weather[0].main === 'Thunderstorm' ? '⛈️' :
+                     weather.weather[0].main === 'Snow' ? '❄️' :
+                     weather.weather[0].main === 'Mist' || weather.weather[0].main === 'Fog' ? '🌫️' : '🌤️'}
+                  </span>
                 )}
               </div>
-            ) : (
-              <p style={{ color: '#6c757d' }}>Loading weather data...</p>
-            )}
+              {weather.main ? (
+                <div>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'baseline', 
+                    marginBottom: '16px',
+                    gap: '8px'
+                  }}>
+                    <span style={{ fontSize: '48px', fontWeight: '700', lineHeight: '1' }}>
+                      {Math.round(weather.main.temp)}°
+                    </span>
+                    <span style={{ fontSize: '24px', opacity: 0.9 }}>C</span>
+                  </div>
+                  {weather.weather && weather.weather[0] && (
+                    <p style={{ 
+                      fontSize: '16px', 
+                      marginBottom: '20px',
+                      textTransform: 'capitalize',
+                      opacity: 0.95,
+                      fontWeight: '500'
+                    }}>
+                      {weather.weather[0].description}
+                    </p>
+                  )}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '16px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.2)'
+                  }}>
+                    <div>
+                      <p style={{ 
+                        margin: 0, 
+                        fontSize: '12px', 
+                        opacity: 0.8,
+                        marginBottom: '4px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        {t('farmerDashboard.humidity')}
+                      </p>
+                      <p style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+                        {weather.main.humidity}%
+                      </p>
+                    </div>
+                    {weather.wind && (
+                      <div>
+                        <p style={{ 
+                          margin: 0, 
+                          fontSize: '12px', 
+                          opacity: 0.8,
+                          marginBottom: '4px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          Wind
+                        </p>
+                        <p style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+                          {weather.wind.speed} m/s
+                        </p>
+                      </div>
+                    )}
+                    {weather.main.feels_like && (
+                      <div>
+                        <p style={{ 
+                          margin: 0, 
+                          fontSize: '12px', 
+                          opacity: 0.8,
+                          marginBottom: '4px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          Feels Like
+                        </p>
+                        <p style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+                          {Math.round(weather.main.feels_like)}°C
+                        </p>
+                      </div>
+                    )}
+                    {weather.name && (
+                      <div>
+                        <p style={{ 
+                          margin: 0, 
+                          fontSize: '12px', 
+                          opacity: 0.8,
+                          marginBottom: '4px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          Location
+                        </p>
+                        <p style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+                          {weather.name}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>Loading weather data...</p>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="card">
-            <h3 style={{ marginTop: 0, color: '#2d8659', marginBottom: '16px' }}>
-              {t('farmerDashboard.advice')}
-            </h3>
-            <p style={{ fontSize: '16px', lineHeight: '1.8' }}>{advice}</p>
+          <div className="card" style={{
+            background: 'linear-gradient(135deg, #f4a261 0%, #e76f51 100%)',
+            color: 'white',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-30px',
+              left: '-30px',
+              width: '100px',
+              height: '100px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }}></div>
+            <div style={{
+              position: 'absolute',
+              bottom: '-20px',
+              right: '-20px',
+              width: '80px',
+              height: '80px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              borderRadius: '50%'
+            }}></div>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>
+                  {t('farmerDashboard.advice')}
+                </h3>
+                <span style={{ fontSize: '32px' }}>💡</span>
+              </div>
+              {advice ? (
+                <div>
+                  <p style={{ 
+                    fontSize: '16px', 
+                    lineHeight: '1.8',
+                    margin: 0,
+                    opacity: 0.95,
+                    fontWeight: '400'
+                  }}>
+                    {advice}
+                  </p>
+                  {/* MOVED THIS DIV TO BE DIRECTLY UNDER THE PARAGRAPH */}
+                  <div style={{
+                    marginTop: '20px', // Maintain spacing from the advice paragraph
+                    paddingTop: '16px',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <span style={{ fontSize: '14px', opacity: 0.8 }}>✨</span>
+                    <span style={{ fontSize: '12px', opacity: 0.7, fontStyle: 'italic' }}>
+                      AI-powered farming insights
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>Loading advice...</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div className="card">
